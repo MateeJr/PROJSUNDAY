@@ -659,14 +659,25 @@ Form System
     contextRef.current.fillStyle = 'white';
     contextRef.current.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Reset selfie and restart camera
+    // Reset selfie state
     setSelfieCaptured(null);
+    setIsCapturingSelfie(false);
+    
+    // Stop current camera if running
+    if (selfieWebcamRef.current) {
+      const stream = selfieWebcamRef.current.stream;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    }
+    
+    // Reset webcam ready state to trigger reinitialization
     setIsSelfieWebcamReady(false);
     
-    // Small delay to ensure camera restarts properly
+    // Small delay to ensure camera fully stops before restarting
     setTimeout(() => {
       setIsSelfieWebcamReady(true);
-    }, 500);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -1086,6 +1097,7 @@ Form System
                   {/* Hidden selfie webcam - moved to top level for better initialization */}
                   <div className="fixed top-0 left-0 opacity-0 pointer-events-none">
                     <Webcam
+                      key={selfieCaptured ? 'captured' : 'new'}
                       ref={selfieWebcamRef}
                       screenshotFormat="image/jpeg"
                       videoConstraints={{
